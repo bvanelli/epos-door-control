@@ -1,0 +1,20 @@
+{
+  "name": "rest-api",
+  "version": "1.0.1",
+  "description": "The REST API that runs the door control app. It provides synchronization to the remote nodes as well as persistence storage in a Cassandra cluster.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "REST",
+    "API",
+    "Cassandra"
+  ],
+  "author": "Brunno Vanelli",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "cassandra-driver": "^3.3.0",
+    "restify": "^6.2.0"
+  }
+}
