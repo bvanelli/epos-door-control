@@ -1,0 +1,25 @@
+
+# Working output pins (tested blinking a led)
+GPIO::OUT
+
+PA0 - PA7
+PB3 - PB7
+PC3 - PC6
+PD0 - PD5
+
+# Working input pins (tested blinking a led INTO the port)
+GPIO::IN
+
+PA0 - PA7
+PB3 - PB7
+PC4 - PC6
+PD0 - PD5
+
+# Working ADC
+ADC::SINGLE_ENDED_ADC
+
+PA0 - PA7
+
+# For no particular reason, disabling Hydro board adds
+
+PB0 - PB1

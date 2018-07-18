@@ -1,0 +1,406 @@
+
+
+Exception (3):
+
+epc1=0x401003e9 epc2=0x00000000 epc3=0x00000000 excvaddr=0x40072491 depc=0x00000000
+
+
+ctx: sys 
+sp: 3ffffd30 end: 3fffffb0 offset: 01a0
+
+
+>>>stack>>>
+3ffffed0:  3fff1c7c 000002d5 000002d5 4010020c  
+
+3ffffee0:  00000001 00000008 3fff258c 3ffe802c  
+
+3ffffef0:  00000001 0000002c 3fff258c 401004f4  
+
+3fffff00:  4023a0df 00000008 3fff258c 40106994  
+
+3fffff10:  3fff3bee 3ffefc8a 3fff3b44 40258476  
+
+3fffff20:  00000006 3ffef980 00000010 00000001  
+
+3fffff30:  3ffefbf0 3fff2590 40258548 3ffef760  
+
+3fffff40:  4023ca97 00000009 00000010 00000005  
+
+3fffff50:  3ffef8a6 00000200 4023cf7b 3ffef760  
+
+3fffff60:  3ffef8a4 000013ca 4023d9a5 00000003  
+
+3fffff70:  3fff395c 40231c17 3ffef310 00309790  
+
+3fffff80:  3ffee630 4023160e 3fffdab0 00000000  
+
+3fffff90:  3fffdcc0 3ffeafa0 00000000 40201cbf  
+
+3fffffa0:  3ffeafa0 40000f49 3fffdab0 40000f49  
+
+<<<stack<<<
+
+
+ ets Jan  8 2013,rst cause:2, boot mode:(3,6)
+
+
+
+load 0x4010f000, len 1384, room 16 
+
+tail 8
+
+chksum 0x2d
+
+csum 0x2d
+
+v00000000
+
+~ld
+
+
+Exception (3):
+
+epc1=0x401003e9 epc2=0x00000000 epc3=0x00000000 excvaddr=0x40072491 depc=0x00000000
+
+
+ctx: sys 
+sp: 3ffffd30 end: 3fffffb0 offset: 01a0
+
+
+>>>stack>>>
+3ffffed0:  3fff1c7c 000002d5 000002d5 4010020c  
+
+3ffffee0:  00000001 00000008 3fff258c 3ffe802c  
+
+3ffffef0:  00000001 0000002c 3fff258c 401004f4  
+
+3fffff00:  4023a0df 00000008 3fff258c 40106994  
+
+3fffff10:  3fff3bee 3ffefc8a 3fff3b44 40258476  
+
+3fffff20:  00000006 3ffef980 00000010 00000001  
+
+3fffff30:  3ffefbf0 3fff2590 40258548 3ffef760  
+
+3fffff40:  4023ca97 00000009 00000010 00000005  
+
+3fffff50:  3ffef8a6 00000200 4023cf7b 3ffef760  
+
+3fffff60:  3ffef8a4 000013ca 4023d9a5 00000003  
+
+3fffff70:  3fff395c 40231c17 00000000 00000000  
+
+3fffff80:  3ffee658 4023160e 3fffdab0 00000000  
+
+3fffff90:  3fffdcc0 3ffeaf80 00000000 40201cbf  
+
+3fffffa0:  3ffeaf80 40000f49 3fffdab0 40000f49  
+
+<<<stack<<<
+
+
+ ets Jan  8 2013,rst cause:2, boot mode:(3,6)
+
+
+
+load 0x4010f000, len 1384, room 16 
+
+tail 8
+
+chksum 0x2d
+
+csum 0x2d
+
+v00000000
+
+~ld
+
+
+Exception (3):
+
+epc1=0x401003e9 epc2=0x00000000 epc3=0x00000000 excvaddr=0x40072491 depc=0x00000000
+
+
+ctx: sys 
+sp: 3ffffd30 end: 3fffffb0 offset: 01a0
+
+
+>>>stack>>>
+3ffffed0:  3fff1c7c 000002d5 000002d5 4010020c  
+
+3ffffee0:  00000001 00000008 3fff258c 3ffe802c  
+
+3ffffef0:  00000001 0000002c 3fff258c 401004f4  
+
+3fffff00:  4023a0df 00000008 3fff258c 40106994  
+
+3fffff10:  3fff3bee 3ffefc8a 3fff3b44 40258476  
+
+3fffff20:  00000006 3ffef980 00000010 00000001  
+
+3fffff30:  3ffefbf0 3fff2590 40258548 3ffef760  
+
+3fffff40:  4023ca97 00000009 00000010 00000005  
+
+3fffff50:  3ffef8a6 00000200 4023cf7b 3ffef760  
+
+3fffff60:  3ffef8a4 000013ca 4023d9a5 00000003  
+
+3fffff70:  3fff395c 40231c17 3ffef310 00318186  
+
+3fffff80:  3ffee658 4023160e 3fffdab0 00000000  
+
+3fffff90:  3fffdcc0 3ffeaf58 00000000 40201cbf  
+
+3fffffa0:  3ffeaf58 40000f49 3fffdab0 40000f49  
+
+<<<stack<<<
+
+
+ ets Jan  8 2013,rst cause:2, boot mode:(3,6)
+
+
+
+load 0x4010f000, len 1384, room 16 
+
+tail 8
+
+chksum 0x2d
+
+csum 0x2d
+
+v00000000
+
+~ld
+
+
+Exception (3):
+
+epc1=0x401003e9 epc2=0x00000000 epc3=0x00000000 excvaddr=0x40072491 depc=0x00000000
+
+
+ctx: sys 
+sp: 3ffffd30 end: 3fffffb0 offset: 01a0
+
+
+>>>stack>>>
+3ffffed0:  3fff1c7c 000002d5 000002d5 4010020c  
+
+3ffffee0:  00000001 00000008 3fff258c 3ffe802c  
+
+3ffffef0:  00000001 0000002c 3fff258c 401004f4  
+
+3fffff00:  4023a0df 00000008 3fff258c 40106994  
+
+3fffff10:  3fff3bee 3ffefc8a 3fff3b44 40258476  
+
+3fffff20:  00000006 3ffef980 00000010 00000001  
+
+3fffff30:  3ffefbf0 3fff2590 40258548 3ffef760  
+
+3fffff40:  4023ca97 00000009 00000010 00000005  
+
+3fffff50:  3ffef8a6 00000200 4023cf7b 3ffef760  
+
+3fffff60:  3ffef8a4 000013ca 4023d9a5 00000003  
+
+3fffff70:  3fff395c 40231c17 00000000 00000000  
+
+3fffff80:  3ffee658 4023160e 3fffdab0 00000000  
+
+3fffff90:  3fffdcc0 3ffeaf90 00000000 40201cbf  
+
+3fffffa0:  3ffeaf90 40000f49 3fffdab0 40000f49  
+
+<<<stack<<<
+
+
+ ets Jan  8 2013,rst cause:2, boot mode:(3,6)
+
+
+
+load 0x4010f000, len 1384, room 16 
+
+tail 8
+
+chksum 0x2d
+
+csum 0x2d
+
+v00000000
+
+~ld
+
+
+Exception (3):
+
+epc1=0x401003e9 epc2=0x00000000 epc3=0x00000000 excvaddr=0x40072491 depc=0x00000000
+
+
+ctx: sys 
+sp: 3ffffd30 end: 3fffffb0 offset: 01a0
+
+
+>>>stack>>>
+3ffffed0:  3fff1c7c 000002d5 000002d5 4010020c  
+
+3ffffee0:  00000001 00000008 3fff258c 3ffe802c  
+
+3ffffef0:  00000001 0000002c 3fff258c 401004f4  
+
+3fffff00:  4023a0df 00000008 3fff258c 40106994  
+
+3fffff10:  3fff3bee 3ffefc8a 3fff3b44 40258476  
+
+3fffff20:  00000006 3ffef980 00000010 00000001  
+
+3fffff30:  3ffefbf0 3fff2590 40258548 3ffef760  
+
+3fffff40:  4023ca97 00000009 00000010 00000005  
+
+3fffff50:  3ffef8a6 00000200 4023cf7b 3ffef760  
+
+3fffff60:  3ffef8a4 000013ca 4023d9a5 00000003  
+
+3fffff70:  3fff395c 40231c17 00000000 00000000  
+
+3fffff80:  3ffee630 4023160e 3fffdab0 00000000  
+
+3fffff90:  3fffdcc0 3ffeafb8 00000000 40201cbf  
+
+3fffffa0:  3ffeafb8 40000f49 3fffdab0 40000f49  
+
+<<<stack<<<
+
+
+ ets Jan  8 2013,rst cause:2, boot mode:(3,6)
+
+
+
+load 0x4010f000, len 1384, room 16 
+
+tail 8
+
+chksum 0x2d
+
+csum 0x2d
+
+v00000000
+
+~ld
+
+
+Exception (3):
+
+epc1=0x401003e9 epc2=0x00000000 epc3=0x00000000 excvaddr=0x40072491 depc=0x00000000
+
+
+ctx: sys 
+sp: 3ffffd30 end: 3fffffb0 offset: 01a0
+
+
+>>>stack>>>
+3ffffed0:  3fff1c7c 000002d5 000002d5 4010020c  
+
+3ffffee0:  00000001 00000008 3fff258c 3ffe802c  
+
+3ffffef0:  00000001 0000002c 3fff258c 401004f4  
+
+3fffff00:  4023a0df 00000008 3fff258c 40106994  
+
+3fffff10:  3fff3bee 3ffefc8a 3fff3b44 40258476  
+
+3fffff20:  00000006 3ffef980 00000010 00000001  
+
+3fffff30:  3ffefbf0 3fff2590 40258548 3ffef760  
+
+3fffff40:  4023ca97 00000009 00000010 00000005  
+
+3fffff50:  3ffef8a6 00000200 4023cf7b 3ffef760  
+
+3fffff60:  3ffef8a4 000013ca 4023d9a5 00000003  
+
+3fffff70:  3fff395c 40231c17 00000000 00000000  
+
+3fffff80:  3ffee658 4023160e 3fffdab0 00000000  
+
+3fffff90:  3fffdcc0 3ffeaf80 00000000 40201cbf  
+
+3fffffa0:  3ffeaf80 40000f49 3fffdab0 40000f49  
+
+<<<stack<<<
+
+
+ ets Jan  8 2013,rst cause:2, boot mode:(3,6)
+
+
+
+load 0x4010f000, len 1384, room 16 
+
+tail 8
+
+chksum 0x2d
+
+csum 0x2d
+
+v00000000
+
+~ld
+
+
+Exception (3):
+
+epc1=0x401003e9 epc2=0x00000000 epc3=0x00000000 excvaddr=0x40072491 depc=0x00000000
+
+
+ctx: sys 
+sp: 3ffffd30 end: 3fffffb0 offset: 01a0
+
+
+>>>stack>>>
+3ffffed0:  3fff1c7c 000002d5 000002d5 4010020c  
+
+3ffffee0:  00000001 00000008 3fff258c 3ffe802c  
+
+3ffffef0:  00000001 0000002c 3fff258c 401004f4  
+
+3fffff00:  4023a0df 00000008 3fff258c 40106994  
+
+3fffff10:  3fff3bee 3ffefc8a 3fff3b44 40258476  
+
+3fffff20:  00000006 3ffef980 00000010 00000001  
+
+3fffff30:  3ffefbf0 3fff2590 40258548 3ffef760  
+
+3fffff40:  4023ca97 00000009 00000010 00000005  
+
+3fffff50:  3ffef8a6 00000200 4023cf7b 3ffef760  
+
+3fffff60:  3ffef8a4 000013ca 4023d9a5 00000003  
+
+3fffff70:  3fff395c 40231c17 00000000 00000000  
+
+3fffff80:  3ffee630 4023160e 3fffdab0 00000000  
+
+3fffff90:  3fffdcc0 3ffeaf28 00000000 40201cbf  
+
+3fffffa0:  3ffeaf28 40000f49 3fffdab0 40000f49  
+
+<<<stack<<<
+
+
+ ets Jan  8 2013,rst cause:2, boot mode:(3,6)
+
+
+
+load 0x4010f000, len 1384, room 16 
+
+tail 8
+
+chksum 0x2d
+
+csum 0x2d
+
+v00000000
+
+~ld
