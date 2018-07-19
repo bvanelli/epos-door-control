@@ -1,115 +1,96 @@
-// EPOS Cortex ESP8266 Wi-Fi Board Mediator Declarations
+// EPOS ESP8266 NIC Mediator
 
 #include <system/config.h>
-#ifndef __mmod_zynq__
-#ifndef __esp8266_h
+#if !defined(__esp8266_h) && defined(__mmod_emote3__)
+
 #define __esp8266_h
 
 #include <machine.h>
-#include <machine/cortex/uart.h>
-#include <machine/cortex/gpio.h>
+#include <uart.h>
 #include <utility/string.h>
+#include <alarm.h>
+#include <nic.h>
+#include <utility/debug.h>
 
 __BEGIN_SYS
 
-class ESP8266
+/*
+    Copy of the abstract implementation of a NIC, to implement a ESP8266 running custom firmware as a NIC.
+    
+    To use it, connect the ESP8266 - eMote3 pins as follows (assuming UNIT = 0, enabled by default):
+    
+    ESP8266 TX - A0 emote3
+    ESP8266 RX - A1 eMote3
+
+    Use the example in app/esp8266.cc and app/esp8266_traits.h to get you started.
+
+    Known bugs and TODOS:
+        - Some functions are not yet tested.
+        - Retrieving large files with ESP8266::get can crash the ESP.
+        - Some certificates like pastebin.com can crash the ESP.
+        - Eduroam may eventually crash the ESP on startup.
+        - For ESP SDK limitations, true secure connections can't be established. Possible solutions are:
+            * Hardcoding the SHA1 fingerprint - Can change over time.
+            * Establishing a root certificate - Just bad.
+        
+*/
+class ESP8266 : NIC
 {
-    static const unsigned int SSID_MAX = 64;
-    static const unsigned int PASS_MAX = 64;
-    static const unsigned int USERNAME_MAX = 64;
-    static const unsigned int HOST_MAX = 128;
-    static const unsigned int ROUTE_MAX = 128;
-    static const unsigned int IP_MAX = 16;
-    static const unsigned int DEFAULT_TIMEOUT = 20000000;
+public:
 
-    typedef RTC::Microsecond Microsecond;
+    typedef int RSSI;
+    
+    // Current implementation of ESP8266 firmware will only support HTTP and HTTPS. MQTT might be added later.
+    enum {HTTP, HTTPS};
 
-    enum Timeout_Action {
-        RETURN,
-        RESET_ESP,
-        REBOOT_MACHINE
-    };
+    ESP8266();
+    ~ESP8266() {};
+    
+    RTC::Microsecond now();
+ 
+    // TODO
+    int send(const Address, const Protocol &prot, const void *data, unsigned int size) { return 0; }
+    int receive(Address *src, Protocol *prot, void *data, unsigned int size) { return 0; }
 
-    // enum Authentication_Type {
-    //     WPA2-Personnal,
-    //     WPA2-Enterprise
-    // };
+    bool restart()
+    { 
+        // this is probably a bad practice, as it will timeout on connection fail
+        // 10 seconds delay is needed because WPA2-Enterprise like eduroam can be slow on connecting
+        db<ESP8266>(TRC) << "ESP8266::restart()" << endl;
+        send_command("AT+RESTART", strlen("AT+RESTART"));
+        return wait_response("READY", 10*1000*1000);
+    }
 
-    static const Timeout_Action TIMEOUT_ACTION = REBOOT_MACHINE;
+    // TODO
+    void on();
+    void off();
+    void reset()
+    {
+        off();
+        Machine::delay(500000);
+        on();
+    }
+
+    unsigned int mtu() { return 0; }
+    const Address address();
+    const Statistics statistics();
+    RSSI rssi();
 
 public:
-    ESP8266(UART *uart, GPIO *power) : _rstkey(power), _uart(uart), _connected(false) { }
 
-    ESP8266(UART *uart, GPIO *power, int port, const char *host, unsigned int host_size, const char *route, unsigned int route_size) : _rstkey(power), _uart(uart), _connected(false) {
-        config_endpoint(port, host, host_size, route, route_size);
-    }
-
-    ~ESP8266() {}
-
-    void on() { _rstkey->set(1); }
-    void off() { _rstkey->set(0); }
-
-    RTC::Microsecond now(Microsecond timeout = DEFAULT_TIMEOUT);
-
-    int send(const char * data, unsigned int size) {
-        return send_data(data, size);
-    }
-
-    void reset();
-
-    bool connect(const char *ssid, int ssid_size, const char *pass, int pass_size, const char *username = "", int username_size = 0);
-
-    bool connect();
-
-    void config_endpoint(int port, const char *host, unsigned int host_size, const char *route, unsigned int route_size);
-
-    void gmt_offset(long gmt_offset_sec);
-
-    bool command_mode();
-
-    int post(const void * data, unsigned int data_size, char * res, unsigned int res_size);
-
-    int get(char * res, unsigned int res_size);
-
-    bool connected();
-
-    const char * ssid() { return _ssid; }
-    const char * pass() { return _password; }
-    const char * host() { return _host; }
-    const char * route() { return _route; }
-    int port(){ return _port; }
-    const char * ip();
-
+    unsigned int send_command(const char *command, unsigned int size);
+    unsigned int wait_response(const char * expected, const RTC::Microsecond & timeout, char * response = 0, unsigned int response_length = 0);
+    unsigned int post(const char * url, const void * payload, const unsigned int payload_size, void * data = 0, unsigned int data_size = 0); // TODO
+    unsigned int get(const char * url, void * data = 0, unsigned int data_size = 0);
+    
 private:
-    void flush_serial();
-
-    int send_no_wait(const char *command, unsigned int size);
-
-    bool send_data(const char * data, unsigned int size, unsigned int attempts = 1);
-
-    int wait_response(char * response, unsigned int response_size, Microsecond timeout = DEFAULT_TIMEOUT);
-
-    bool check_response(const char * expected, Microsecond timeout = DEFAULT_TIMEOUT);
-
-    int check_timeout();
-
-    GPIO * _rstkey;
     UART * _uart;
-    TSC::Time_Stamp _last_send;
-    TSC::Time_Stamp _init_timeout;
+    GPIO * _pwrkey;
+    unsigned int _method;
+    static const unsigned int UNITS = Traits<ESP8266>::UNITS;
 
-    char _ssid[SSID_MAX];
-    char _username[SSID_MAX];
-    char _password[PASS_MAX];
-    char _host[HOST_MAX];
-    char _route[ROUTE_MAX];
-    char _ip[IP_MAX];
-    int _port;
-
-    bool _connected;
 };
 
 __END_SYS
 
-#endif
 #endif

@@ -61,7 +61,10 @@ public:
     public:
         static const unsigned int SIZE_MAX = 10;
 
-        UID() : _size(0) {}
+        UID() : _size(0) {
+            for(unsigned int i = 0; i < SIZE_MAX + 1; i++)
+                _uid_sak[i] = 0; // zero uid at startup
+        }
         UID(const void * id, unsigned int size = SIZE_MAX, Reg8 sak = 0) {
             uid(id, size);
             _uid_sak[_size] = sak;
@@ -97,10 +100,10 @@ public:
         }
 
         operator unsigned int() const {
-            unsigned long long ret = 0;
-            for(unsigned int i = 0; i < SIZE_MAX; i++)
+            unsigned int ret = 0;
+            for(unsigned int i = 0; i < _size; i++)
                 ret ^= _uid_sak[i] << ((i % sizeof(unsigned int)) * 8);
-            return ret;
+            return ret; // FIXME: note that the function will likely overflow if _size > 4
         }
 
         friend Debug & operator<<(Debug & db, const UID & u) {

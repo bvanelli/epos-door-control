@@ -1,359 +1,207 @@
-// EPOS Cortex ESP8266 Wi-Fi Board Mediator Implementation
+#include <system/config.h>
+#if defined(__mmod_emote3__)
 
+#include <machine/cortex/machine.h>
 #include <machine/cortex/esp8266.h>
-#ifndef __mmod_zynq__
+#include <machine/cortex/uart.h>
 
 __BEGIN_SYS
 
-// Class attributes
-
-// Methods
-
-int ESP8266::check_timeout()
+ESP8266::ESP8266()
 {
-    if(TSC::time_stamp() > _init_timeout) {
-        switch(TIMEOUT_ACTION) {
-            case REBOOT_MACHINE:
-                CPU::int_disable();
-                Machine::delay(5000000);
-                Machine::reboot();
-                break;
-            case RESET_ESP:
-                reset();
-                // fallthrough
-            case RETURN:
-            default:
-                return -1;
-        }
-        return -1;
-    }
-    else
-        return 1;
+    _uart = new (SYSTEM) UART(Traits<ESP8266>::UART_UNIT,
+                              Traits<ESP8266>::UART_BAUD_RATE,
+                              Traits<ESP8266>::UART_DATA_BITS,
+                              Traits<ESP8266>::UART_PARITY,
+                              Traits<ESP8266>::UART_STOP_BITS);
+    
+    _method = Traits<ESP8266>::METHOD;
+    _pwrkey = new (SYSTEM) GPIO(Traits<ESP8266>::PWRKEY_PORT, Traits<ESP8266>::PWRKEY_PIN, GPIO::OUT);
 }
 
-RTC::Microsecond ESP8266::now(Microsecond timeout)
+unsigned int ESP8266::send_command(const char *command, unsigned int size)
 {
-    command_mode();
+    db<ESP8266>(TRC) << "ESP8266::send_command(c=" << command << ",size=" << size << ")" << endl;
 
-    const char cmd[] = "AT+GETTIMESTAMP\r\n";
-    send_no_wait(cmd, strlen(cmd));
+    if(_uart->ready_to_get())
+        while(_uart->ready_to_get())
+            db<ESP8266>(INF) << _uart->get();
 
-    char time[11];
-    int size = wait_response(time, 10);
-    if(strcmp(time,"ERR\r\n") > 0)
-    {
-        reset();
-        Machine::reboot();
-    }
-    if(size <= 0)
-        return -1;
-    time[size] = 0;
-
-    return atoi(time) * 1000000ULL;
-}
-
-void ESP8266::reset()
-{
-    off();
-    Machine::delay(500000); // 500ms delay recommended by the manual
-    on();
-}
-
-bool ESP8266::connect(const char *ssid, int ssid_size, const char *pass, int pass_size, const char *username, int username_size)
-{
-    assert(ssid_size < SSID_MAX);
-    assert(ssid_size < USERNAME_MAX);
-    assert(pass_size < PASS_MAX);
-
-    memcpy(_ssid, ssid, ssid_size);
-    memcpy(_username, username, username_size);
-    memcpy(_password, pass, pass_size);
-
-    command_mode();
-
-    //SET SSID
-    char set_ssid[13 + ssid_size];
-    const char temp_ssid[] = "AT+SETSSID=";
-    const char end_of_line[2] = {'\r', '\n'};
-
-    strncpy(set_ssid, temp_ssid, sizeof(temp_ssid) - 1);
-    strncpy(&set_ssid[sizeof(temp_ssid) - 1], ssid, ssid_size);
-    strncpy(&set_ssid[sizeof(temp_ssid) + ssid_size - 1], end_of_line, sizeof(end_of_line));
-
-    Machine::delay(100000);
-    send_data(set_ssid, sizeof(set_ssid), 1);
-
-    //SET USERNAME (for WPA-Enterprise only)
-    if(username_size > 0) {
-        char set_username[17 + username_size];
-        const char temp_username[] = "AT+SETUSERNAME=";
-
-        strncpy(set_username, temp_username, sizeof(temp_username) - 1);
-        strncpy(&set_username[sizeof(temp_username) - 1], username, username_size);
-        strncpy(&set_username[sizeof(temp_username) + username_size - 1], end_of_line, sizeof(end_of_line));
-
-        Machine::delay(100000);
-        send_data(set_username, sizeof(set_username), 1);
-    }
-
-    //SET PASSWORD
-    char set_pass[17 + pass_size];
-    const char temp_pass[] = "AT+SETPASSWORD=";
-
-    strncpy(set_pass, temp_pass, sizeof(temp_pass) - 1);
-    strncpy(&set_pass[sizeof(temp_pass) - 1], pass, pass_size);
-    strncpy(&set_pass[sizeof(temp_pass) + pass_size - 1], end_of_line, sizeof(end_of_line));
-
-    Machine::delay(100000);
-    send_data(set_pass, sizeof(set_pass), 1);
-
-    Machine::delay(100000);
-
-    const char connect_wifi[] = "AT+CONNECTWIFI\r\n";
-    _connected = send_data(connect_wifi, sizeof(connect_wifi) - 1, 1);
-    return _connected;
-}
-
-bool ESP8266::connect()
-{
-    command_mode();
-    Machine::delay(100000);
-    const char connect_wifi[] = "AT+CONNECTWIFIAUTOMATIC\r\n";
-    _connected = send_data(connect_wifi, sizeof(connect_wifi) - 1, 1);
-    return _connected;
-}
-
-void ESP8266::config_endpoint(int port, const char *host, unsigned int host_size, const char *route, unsigned int route_size)
-{
-    assert(host_size < HOST_MAX);
-    assert(route_size < ROUTE_MAX);
-
-    _port = port;
-    memcpy(_host, host, host_size);
-    memcpy(_route, route, route_size);
-
-    char set_host[13 + host_size];
-    const char temp_host[] = "AT+SETHOST=";
-    const char end_of_line[2] = {'\r', '\n'};
-
-    strncpy(set_host, temp_host, sizeof(temp_host) - 1);
-    strncpy(&set_host[sizeof(temp_host) - 1], host, host_size);
-    strncpy(&set_host[sizeof(temp_host) + host_size - 1], end_of_line, sizeof(end_of_line));
-
-    Machine::delay(100000);
-    send_data(set_host, sizeof(set_host), 5);
-
-    char set_route[14 + route_size];
-    const char temp_route[] = "AT+SETROUTE=";
-
-    strncpy(set_route, temp_route, sizeof(temp_route) - 1);
-    strncpy(&set_route[sizeof(temp_route) - 1], route, route_size);
-    strncpy(&set_route[sizeof(temp_route) + route_size - 1], end_of_line, sizeof(end_of_line));
-
-    Machine::delay(100000);
-    send_data(set_route, sizeof(set_route), 5);
-
-    const char temp_port[] = "AT+SETPORT=";
-    char port_str[33];
-
-    itoa(port, port_str);
-
-    int size_of_port = strlen(port_str);
-
-    char set_port[13 + size_of_port];
-
-    strncpy(set_port, temp_port, sizeof(temp_port) - 1);
-    strncpy(&set_port[sizeof(temp_port) - 1], port_str, size_of_port);
-    strncpy(&set_port[sizeof(temp_port) + size_of_port - 1], end_of_line, sizeof(end_of_line));
-
-    Machine::delay(100000);
-    send_data(set_port, sizeof(set_port), 5);
-}
-
-void ESP8266::gmt_offset(long gmt_offset_sec)
-{
-    const char temp_gmt[] = "AT+SETGMTOFFSET=";
-    const char end_of_line[2] = {'\r', '\n'};
-    char gmt_str[33];
-
-    itoa(gmt_offset_sec, gmt_str);
-
-    int size_of_gmt = strlen(gmt_str);
-
-    char set_gmt[18 + size_of_gmt];
-
-    strncpy(set_gmt, temp_gmt, sizeof(temp_gmt) - 1);
-    strncpy(&set_gmt[sizeof(temp_gmt) - 1], gmt_str, size_of_gmt);
-    strncpy(&set_gmt[sizeof(temp_gmt) + size_of_gmt - 1], end_of_line, sizeof(end_of_line));
-
-    Machine::delay(100000);
-    send_data(set_gmt, sizeof(set_gmt), 5);
-}
-
-bool ESP8266::command_mode()
-{
-    flush_serial();
-    _uart->put('+');
-    _uart->put('+');
-    _uart->put('+');
-    _uart->put('\r');
-    _uart->put('\n');
-
-    return check_response("OK\r\n");
-}
-
-int ESP8266::post(const void * data, unsigned int data_size, char * res, unsigned int res_size)
-{
-    command_mode();
-
-    char command[] = "AT+SENDPOST=";
-
-    char request[sizeof(command) - 1 + 2 + data_size]; //-1 for \0 and +2 for \r\n
-    strncpy(request, command, sizeof(command) - 1);
-
-    memcpy(&request[sizeof(command) - 1], data, data_size);
-
-    request[sizeof(command) - 1 + data_size] = '\r';
-    request[sizeof(command) + data_size] = '\n';
-
-    db<ESP8266>(WRN) << request << endl;
-    send_no_wait(request, sizeof(request));
-
-    // FIXME: This is stopping at \r\n. How do we know the size of the response?
-    int ret = wait_response(res, res_size);
-
-    return ret;
-}
-
-int ESP8266::get(char * res, unsigned int res_size)
-{
-    command_mode();
-
-    char command[] = "AT+SENDGET";
-
-    send_no_wait(command, sizeof(command));
-
-    // FIXME: This is stopping at \r\n. How do we know the size of the response?
-    int ret = wait_response(res, res_size);
-
-    command_mode();
-
-    return ret;
-}
-
-bool ESP8266::connected()
-{
-    send_no_wait("AT+CONNECTIONSTATUS\r\n", 21);
-
-    _connected = check_response("1\r\n");
-
-    return _connected;
-}
-
-const char * ESP8266::ip()
-{
-    command_mode();
-
-    const char cmd[] = "AT+GETIP";
-    send_no_wait(cmd, strlen(cmd));
-
-    _uart->put('\r');
-    _uart->put('\n');
-
-    int size = wait_response(_ip, IP_MAX);
-    if(size <= 2)
-        size = 2;
-    _ip[size - 2] = 0; // Discard '\r\n'
-
-    return _ip;
-}
-
-void ESP8266::flush_serial()
-{
-    db<ESP8266>(WRN) << "flushing serial: ";
-    while(_uart->ready_to_get()) {
-        char c = _uart->get();
-        db<ESP8266>(WRN) << c;
-        Machine::delay(100);
-    }
-    db<ESP8266>(WRN) << endl;
-}
-
-int ESP8266::send_no_wait(const char *command, unsigned int size)
-{
-    flush_serial();
     for(unsigned int i = 0; i < size; i++)
         _uart->put(command[i]);
+    _uart->put('\r');
 
-    return 1;
+    return size;
 }
 
-bool ESP8266::send_data(const char * data, unsigned int size, unsigned int attempts)
+unsigned int ESP8266::wait_response(const char * expected, const RTC::Microsecond & timeout, char * response, unsigned int response_size)
 {
-    // db<ESP8266>(TRC) << "Sending data, size is " << size << " bytes." << endl;
-    db<ESP8266>(WRN) << "Sending data:" << endl;
-    for(unsigned int i=0;i<size;i++)
-        db<ESP8266>(WRN) << data[i];
-    db<ESP8266>(WRN) << endl;
-    bool response = false;
-    flush_serial();
+    db<ESP8266>(TRC) << "ESP8266::wait_response(ex=" << expected << ",tmt=" << timeout << ")" << endl;
 
-    while(!response && attempts > 0) {
+    TSC::Time_Stamp end = TSC::time_stamp() + timeout * TSC::frequency() / 1000000;
 
-        for(unsigned int i = 0; i < size; i++)
-            _uart->put(data[i]);
+    const char error[] = "ERROR";
+    unsigned int ret = 1;
+    unsigned int i = 0;
+    unsigned int j = 0;
+    unsigned int len = strlen(expected);
+    while(i < len) {
+        while(!(_uart->ready_to_get()) && ((timeout == 0) || (TSC::time_stamp() < end)));
 
-        _last_send = TSC::time_stamp();
-
-        response = check_response("OK\r\n");
-
-        attempts--;
-        command_mode();
-        Machine::delay(200000);
-    }
-    db<ESP8266>(WRN) << response << "\n\n";
-    return response;
-}
-
-int ESP8266::wait_response(char * response, unsigned int response_size, Microsecond timeout_time)
-{
-    _init_timeout = TSC::time_stamp() + timeout_time * (TSC::frequency() / 1000000);
-
-    unsigned int i;
-    for(i = 0; i < response_size; i++) {
-        while(!_uart->ready_to_get())
-            if(check_timeout() < 0)
-                return -1;
-
-        response[i] = _uart->get();
-        db<ESP8266>(WRN) << response[i];
-        if(response[i] == '\n' && response[i-1] == '\r')
-            return i+1;
-    }
-    return i;
-}
-
-bool ESP8266::check_response(const char * expected, Microsecond timeout_time)
-{
-    bool ret = true;
-    _init_timeout = TSC::time_stamp() + timeout_time * (TSC::frequency() / 1000000);
-
-    unsigned int sz = strlen(expected);
-    for(unsigned int i = 0; i < sz; i++) {
-        char c;
-        while(!_uart->ready_to_get())
-            if(check_timeout() < 0)
-                return false;
-
-        c = _uart->get();
-        if(c != expected[i]) {
-            ret = false;
+        if(!_uart->ready_to_get()) {
+            db<ESP8266>(WRN) << "ESP8266::wait_response(ex=" << expected << ",tmt=" << timeout << ") => Timeout!" << endl;
+            ret = 0;
             break;
+        }
+
+        char c = _uart->get();
+        db<ESP8266>(INF) << c;
+        if(c == expected[i])
+            i++;
+        else if(c == expected[0])
+            i = 1;
+        else
+            i = 0;
+
+        if(c == error[j]) {
+            j++;
+            if(j >= strlen(error)) {
+                db<ESP8266>(WRN) << "ESP8266::wait_response(ex=" << expected << ",tmt=" << timeout << ") => Error!" << endl;
+                ret = 0;
+                break;
+            }
+        }
+        else if(c == error[0])
+            j = 1;
+        else
+            j = 0;
+    }
+
+    if(response) {
+        for(unsigned int i = 0; i < response_size; i++) {
+            while(!(_uart->ready_to_get()) && ((timeout == 0) || (TSC::time_stamp() < end)));
+
+            if(!_uart->ready_to_get()) {
+                //db<UART>(WRN) << "ESP8266::wait_response(ex=" << expected << ",tmt=" << timeout << ") => Timeout!" << endl;
+                //ret = false; // because there is no termination, break as soon as the timeout or response_size is reached
+                // Also, because there is no termination all wait_responses will always timeout (assuming proper response buffer), because there is no way to tell if the stream ended or just hanged. Make sure your application can wait the timeout time, reduce it or push it to a thread
+                response[i] = '\0';
+                ret = ret * i;
+                break;
+            }
+            response[i] = _uart->get();
+            db<ESP8266>(INF) << response[i];
+            /* Not terminating can be bad, but the HTTP response most likely contain \n\r sequences
+            if(response[i] == '\n')
+                break;
+            */
         }
     }
 
+    while(_uart->ready_to_get())
+        db<ESP8266>(WRN) << _uart->get(); // Warning: not enough response buffer size
+
+    db<ESP8266>(INF) << "ESP8266::wait_response(ret=" << ret << ")" << endl;
     return ret;
 }
 
+unsigned int ESP8266::get(const char * url, void * data, unsigned int data_size)
+{
+    db<ESP8266>(TRC) << "ESP8266::get(url=" << url << ")" << endl;
+    char command[9 + strlen(url)];
+    char * response = reinterpret_cast<char *>(data);
+   
+    if (_method == HTTP)
+        strcpy(command, "AT+GET=");
+    else if (_method == HTTPS)
+        strcpy(command, "AT+GETS=");
+    else
+        return 0;
+    strcat(command, url);
+
+    send_command(command, strlen(command));
+    return wait_response("OK=", 5*1000*1000, response, data_size); // Hardcoding the timeout can be dangerous
+}
+
+unsigned int ESP8266::post(const char * url, const void * payload, const unsigned int payload_size, void * data, unsigned int data_size)
+{
+    db<ESP8266>(TRC) << "ESP8266::post(url=" << url << ")" << endl;
+
+    char payload_command[12 + payload_size];
+    strcpy(payload_command, "AT+PAYLOAD="); 
+    for(unsigned int i = 0; i < payload_size; i++) {
+        payload_command[11 + i] = reinterpret_cast<const char*>(payload)[i];
+    }
+    payload_command[12 + payload_size - 1] = '\0';
+    send_command(payload_command, strlen(payload_command));
+
+    if (!wait_response("OK", 30*1000))
+        return 0;
+
+    char command[10 + strlen(url)];
+    char * response = reinterpret_cast<char *>(data);
+    
+    if (_method == HTTP)
+        strcpy(command, "AT+POST=");
+    else if (_method == HTTPS)
+        strcpy(command, "AT+POSTS=");
+    else
+        return 0;
+    strcat(command, url);
+
+    send_command(command, strlen(command));
+    return wait_response("OK=", 5*1000*1000, response, data_size); // Hardcoding the timeout can be dangerous
+}
+
+RTC::Microsecond ESP8266::now()
+{
+    db<ESP8266>(TRC) << "ESP8266::now()" << endl;
+    char buf[10];
+    RTC::Microsecond time_stamp;
+    send_command("AT+TIMESTAMP", strlen("AT+TIMESTAMP"));
+    if (wait_response("OK=", 500000, buf, 10)) {
+       time_stamp = atol(buf);
+       db<ESP8266>(INF) << "ESP8266::now(ts=" << time_stamp << ")" << endl;
+       return time_stamp;
+    }
+    else {
+        return 0;
+    }
+}
+
+ESP8266::RSSI ESP8266::rssi()
+{
+    db<ESP8266>(TRC) << "ESP8266::rssi()" << endl;
+    char buf[5];
+    ESP8266::RSSI rssi;
+    send_command("AT+RSSI", strlen("AT+RSSI"));
+    if (wait_response("OK=", 5000, buf, 5)) {
+       rssi = atol(buf);
+       db<ESP8266>(INF) << "ESP8266::rssi(rssi=" << rssi << ")" << endl;
+       return rssi;
+    }
+    else {
+        return 0; // FIXME: what if rssi=0?
+    }
+}
+
+/* FIXME: Compiler says 'Address' does not have a name type
+const Address ESP8266::address()
+{
+    db<ESP8266>(TRC) << "ESP8266::address()" << endl;
+    char buf[10];
+    send_command("AT+GETIP", strlen("AT+GETIP"));
+    if (wait_response("OK=", 5000, buf, 4)) {
+       unsigned int ip = atol(buf);
+       db<ESP8266>(INF) << "ESP8266::address(ip=" << ip << ")" << endl;
+       return NIC_Common::Address(ip);
+    }
+    else {
+        return 0;
+    }
+}
+*/
+
 __END_SYS
+
 #endif

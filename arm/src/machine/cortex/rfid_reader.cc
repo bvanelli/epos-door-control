@@ -23,6 +23,7 @@ RFID_Reader::Observed RFID_Reader::_observed;
 // Methods
 MFRC522::MFRC522(SPI * spi, GPIO * select, GPIO * reset) : _spi(spi), _select(select), _reset(reset)
 {
+    db<RFID_Reader>(TRC) << "MFRC522::MFRC522()" << endl;
     _spi->disable();
     _select->direction(GPIO::OUT);
     _select->set();
@@ -37,6 +38,7 @@ MFRC522::~MFRC522()
 
 void MFRC522::initialize()
 {
+    db<RFID_Reader>(TRC) << "MFRC522::initialize()" << endl;
     if(!_reset->get()) {
         _reset->set();
         Machine::delay(100000); // According to datasheet section 8.8.2, the MFRC522 start-up delay time is the start-up time of the crystal oscilator circuit + 37.74us.
@@ -62,6 +64,7 @@ void MFRC522::initialize()
 
 void MFRC522::reset()
 {
+    db<RFID_Reader>(TRC) << "MFRC522::reset()" << endl;
     write_reg(PCD_Register::COMMAND, PCD_Command::SOFT_RESET);
     Machine::delay(100000); // According to datasheet section 8.8.2, the MFRC522 start-up delay time is the start-up time of the crystal oscilator circuit + 37.74us.
     while(read_reg(PCD_Register::COMMAND) & (1 << 4)); // PCD still restarting
@@ -88,6 +91,7 @@ bool MFRC522::card_present()
 
 bool MFRC522::read_card(UID * uid, unsigned int valid_bits)
 {
+    db<RFID_Reader>(TRC) << "MFRC522::read_card()" << endl;
     write_reg(PCD_Register::COLL, read_reg(PCD_Register::COLL) & (~0x80));
 
     bool use_cascade_tag;
@@ -101,16 +105,19 @@ bool MFRC522::read_card(UID * uid, unsigned int valid_bits)
                 buffer[0] = MIFARE::PICC_Command::SEL_CL1;
                 uid_index = 0;
                 use_cascade_tag = (valid_bits > 0) && (uid->size() > 4);  // Use only when it's known that the UID has more than 4 bytes.
+                db<RFID_Reader>(TRC) << "MFRC522::read_card() << MIFARE::PICC_Command::SEL_CL1" << endl;
             break;
             case 2:
                 buffer[0] = MIFARE::PICC_Command::SEL_CL2;
                 uid_index = 3;
                 use_cascade_tag = (valid_bits > 0) && (uid->size() > 7); // Use only when it's known that the UID has more than 7 bytes.
+                db<RFID_Reader>(TRC) << "MFRC522::read_card() << MIFARE::PICC_Command::SEL_CL2" << endl;
             break;
             case 3:
                 buffer[0] = MIFARE::PICC_Command::SEL_CL3;
                 uid_index = 6;
                 use_cascade_tag = false;  // Never used in level 3.
+                db<RFID_Reader>(TRC) << "MFRC522::read_card() << MIFARE::PICC_Command::SEL_CL3" << endl;
             break;
             default:
                 return false;
@@ -148,6 +155,7 @@ bool MFRC522::read_card(UID * uid, unsigned int valid_bits)
                 buffer[1] = 0x70; // Number of Valid Bits = Seven bytes
                 buffer[6] = buffer[2] ^ buffer[3] ^ buffer[4] ^ buffer[5];  // Calculate BCC.
                 unsigned int result = crc(buffer, 7, &buffer[7]);  // Calculate CRC_A.
+                db<RFID_Reader>(TRC) << "MFRC522::read_card(PCD_Status_Code=" << result << ")" << endl;
                 if(result != PCD_Status_Code::OK)
                     return false;
 
@@ -174,6 +182,7 @@ bool MFRC522::read_card(UID * uid, unsigned int valid_bits)
             PCD_Status_Code result = communicate_with_picc(
                 PCD_Command::TRANSCEIVE, wait_irq, buffer, buffer_used, response_buffer, &response_length, &tx_last_bits, rx_align
             );
+            db<RFID_Reader>(TRC) << "MFRC522::read_card(PCD_Status_Code=" << static_cast<unsigned int>(result) << ")" << endl;
 
             if(result == PCD_Status_Code::COLLISION) { // More than one PICC found
                 CPU::Reg8 coll_reg_val = read_reg(PCD_Register::COLL);
@@ -223,10 +232,10 @@ bool MFRC522::read_card(UID * uid, unsigned int valid_bits)
         else {
             uid->size(3 * cascade_level + 1);
             uid->sak(response_buffer[0]);
+            db<RFID_Reader>(INF) << "MFRC522::read_card(UID=" << *uid << ")" << endl;
             break;
         }
     }
-
     return true;
 }
 
